@@ -21,10 +21,10 @@
 #define AK8963_SCALE_UT          0.15f   // 16비트 모드의 µT 변환값
 
 
-static bool magnetometer_available = false;
+static bool magnetometer_available = false; // 현재 자기계를 사용할 준비가 되었는지 저장
 static uint8_t magnetometer_device_id = 0U;
 
-static float magnetometer_adjustment[3] = {
+static float magnetometer_adjustment[3] = { // 좌표별 보정값
     1.0f,
     1.0f,
     1.0f
@@ -43,7 +43,7 @@ static int16_t Magnetometer_CombineBytes(
 }
 
 
-bool Magnetometer_Init(void)
+bool Magnetometer_Init(void) // 대충 초기화
 {
     magnetometer_available = false;
 
@@ -99,13 +99,11 @@ bool Magnetometer_Init(void)
         return false;
     }
 
-    for (uint8_t i = 0U; i < 3U; i++)
+    for (uint8_t i = 0U; i < 3U; i++) // 보정값 넣는 함수
+    // 원시값이 128임 그래서 빼고 256 안에 정수로 압축
     {
         magnetometer_adjustment[i] =
-            (((float)adjustment_raw[i] -
-              128.0f) /
-             256.0f) +
-            1.0f;
+            (((float)adjustment_raw[i] - 128.0f) / 256.0f) + 1.0f;
     }
 
     if (!IMU_AuxWriteRegister(
@@ -132,6 +130,14 @@ bool Magnetometer_Init(void)
 
     return true;
 }
+
+/*
+IMU_AuxReadRegisters()
+→ 자기계에서 원시 바이트를 가져오는 통신 기능
+
+Magnetometer_Read()
+→ 원시 바이트를 검사·결합·보정해서 µT로 변환
+*/
 
 
 bool Magnetometer_Read(
